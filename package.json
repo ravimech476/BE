@@ -24,7 +24,8 @@
     "check:admin": "node checkAdmin.js",
     "create:leaders-table": "node src/migrations/createLeadersTable.js",
     "create:news-table": "node src/migrations/createNewsTable.js",
-    "check:users": "node checkUsers.js"
+    "check:users": "node checkUsers.js",
+    "add:birthday-field": "node src/migrations/addBirthdayField.js"
   },
   "dependencies": {
     "express": "^4.18.2",

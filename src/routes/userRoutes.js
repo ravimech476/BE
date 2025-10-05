@@ -9,4 +9,7 @@ const jsonParser = express.json({ limit: '10mb' });
 // Admin only - Get all users
 router.get('/', authenticate, authorize('admin'), jsonParser, userController.getAllUsers);
 
+// Get upcoming birthdays - Available to all authenticated users
+router.get('/birthdays', authenticate, jsonParser, userController.getUpcomingBirthdays);
+
 module.exports = router;

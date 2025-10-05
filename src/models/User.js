@@ -8,7 +8,7 @@ class User {
             .input('id', sql.Int, id)
             .query(`
                 SELECT id, username, email_id, first_name, last_name, 
-                       role, status, phone, last_login_datetime, created_date
+                       role, status, phone, date_of_birth, last_login_datetime, created_date
                 FROM tbl_users 
                 WHERE id = @id
             `);
@@ -79,7 +79,7 @@ class User {
     
     static async update(userId, updateData) {
         const pool = getPool();
-        const allowedFields = ['first_name', 'last_name', 'phone', 'email_id'];
+        const allowedFields = ['first_name', 'last_name', 'phone', 'email_id', 'date_of_birth'];
         const updates = [];
         const request = pool.request();
         
@@ -89,7 +89,11 @@ class User {
         for (const field of allowedFields) {
             if (updateData[field] !== undefined) {
                 updates.push(`${field} = @${field}`);
-                request.input(field, sql.NVarChar, updateData[field]);
+                if (field === 'date_of_birth') {
+                    request.input(field, sql.Date, updateData[field]);
+                } else {
+                    request.input(field, sql.NVarChar, updateData[field]);
+                }
             }
         }
         
@@ -152,7 +156,7 @@ class User {
         const result = await pool.request()
             .query(`
                 SELECT id, username, email_id, first_name, last_name, 
-                       role, status, phone, last_login_datetime, created_date
+                       role, status, phone, date_of_birth, last_login_datetime, created_date
                 FROM tbl_users 
                 WHERE status = 'active'
                 ORDER BY first_name, last_name
@@ -164,7 +168,7 @@ class User {
         const pool = getPool();
         let query = `
             SELECT id, username, email_id, first_name, last_name, 
-                   role, status, phone, last_login_datetime, created_date
+                   role, status, phone, date_of_birth, last_login_datetime, created_date
             FROM tbl_users 
             WHERE 1=1
         `;
@@ -184,6 +188,38 @@ class User {
         query += ' ORDER BY created_date DESC';
         
         const result = await request.query(query);
+        return result.recordset;
+    }
+    
+    static async getUpcomingBirthdays(days = 30) {
+        const pool = getPool();
+        const result = await pool.request()
+            .input('days', sql.Int, days)
+            .query(`
+                SELECT id, username, email_id, first_name, last_name, 
+                       date_of_birth, phone
+                FROM tbl_users 
+                WHERE status = 'active' 
+                AND date_of_birth IS NOT NULL
+                AND (
+                    -- Birthday is today
+                    (MONTH(date_of_birth) = MONTH(GETDATE()) AND DAY(date_of_birth) = DAY(GETDATE()))
+                    OR
+                    -- Birthday is in the next N days
+                    (
+                        DATEADD(year, DATEDIFF(year, date_of_birth, GETDATE()), date_of_birth) 
+                        BETWEEN GETDATE() AND DATEADD(day, @days, GETDATE())
+                    )
+                )
+                ORDER BY 
+                    CASE 
+                        WHEN MONTH(date_of_birth) = MONTH(GETDATE()) AND DAY(date_of_birth) = DAY(GETDATE()) 
+                        THEN 0 
+                        ELSE 1 
+                    END,
+                    MONTH(date_of_birth), 
+                    DAY(date_of_birth)
+            `);
         return result.recordset;
     }
 }
