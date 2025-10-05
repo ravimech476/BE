@@ -23,6 +23,7 @@
     "check:constraint-details": "node checkConstraintDetails.js",
     "check:admin": "node checkAdmin.js",
     "create:leaders-table": "node src/migrations/createLeadersTable.js",
+    "create:news-table": "node src/migrations/createNewsTable.js",
     "check:users": "node checkUsers.js"
   },
   "dependencies": {

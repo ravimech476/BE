@@ -12,6 +12,7 @@ const blogRoutes = require('./src/routes/blogRoutes');
 const eventRoutes = require('./src/routes/eventRoutes');
 const leaderRoutes = require('./src/routes/leaderRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const newsRoutes = require('./src/routes/newsRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -86,6 +87,7 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/leaders', leaderRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/news', newsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -109,6 +111,7 @@ app.get('/', (req, res) => {
             events: '/api/events',
             leaders: '/api/leaders',
             users: '/api/users',
+            news: '/api/news',
             health: '/api/health'
         }
     });
