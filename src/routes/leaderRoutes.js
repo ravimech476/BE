@@ -6,6 +6,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// JSON body parser for non-file-upload routes
+const jsonParser = express.json({ limit: '10mb' });
+
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, '../../uploads/leaders');
 if (!fs.existsSync(uploadDir)) {
@@ -41,14 +44,14 @@ const upload = multer({
 });
 
 // Public routes
-router.get('/', leaderController.getAllLeaders);
-router.get('/:id', leaderController.getLeader);
+router.get('/', jsonParser, leaderController.getAllLeaders);
+router.get('/:id', jsonParser, leaderController.getLeader);
 
-// Admin routes
-router.get('/admin/all', authenticate, authorize('admin'), leaderController.getAllLeadersForAdmin);
+// Admin routes (with file uploads - NO json parser for create/update)
+router.get('/admin/all', authenticate, authorize('admin'), jsonParser, leaderController.getAllLeadersForAdmin);
 router.post('/', authenticate, authorize('admin'), upload.single('image'), leaderController.createLeader);
 router.put('/:id', authenticate, authorize('admin'), upload.single('image'), leaderController.updateLeader);
-router.delete('/:id', authenticate, authorize('admin'), leaderController.deleteLeader);
-router.put('/admin/display-order', authenticate, authorize('admin'), leaderController.updateDisplayOrder);
+router.delete('/:id', authenticate, authorize('admin'), jsonParser, leaderController.deleteLeader);
+router.put('/admin/display-order', authenticate, authorize('admin'), jsonParser, leaderController.updateDisplayOrder);
 
 module.exports = router;

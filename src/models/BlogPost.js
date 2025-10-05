@@ -3,7 +3,26 @@ const { getPool, sql } = require('../config/database');
 class BlogPost {
     static async create(postData) {
         const pool = getPool();
-        const slug = postData.slug || this.generateSlug(postData.title);
+        let slug = postData.slug || this.generateSlug(postData.title);
+        
+        // Check for duplicate slug and make it unique
+        let slugExists = true;
+        let counter = 1;
+        let originalSlug = slug;
+        
+        while (slugExists) {
+            const checkResult = await pool.request()
+                .input('slug', sql.NVarChar, slug)
+                .query('SELECT id FROM blog_posts WHERE slug = @slug');
+            
+            if (checkResult.recordset.length === 0) {
+                slugExists = false;
+            } else {
+                // Append counter to make slug unique
+                slug = `${originalSlug}-${counter}`;
+                counter++;
+            }
+        }
         
         const result = await pool.request()
             .input('title', sql.NVarChar, postData.title)
@@ -231,6 +250,19 @@ class BlogPost {
                     VALUES (@post_id, @category_id)
                 `);
         }
+    }
+    
+    static async getCategoryIds(postId) {
+        const pool = getPool();
+        const result = await pool.request()
+            .input('post_id', sql.Int, postId)
+            .query(`
+                SELECT category_id 
+                FROM blog_post_categories 
+                WHERE post_id = @post_id
+            `);
+        
+        return result.recordset.map(row => row.category_id);
     }
     
     static async getPopular(limit = 5) {

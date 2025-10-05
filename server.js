@@ -18,8 +18,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-// Security middleware
-app.use(helmet());
+// Security middleware - Configure helmet to allow CORS for static files
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // CORS configuration
 app.use(cors({
@@ -64,9 +66,8 @@ if (!isDevelopment) {
     console.log('🔧 Rate limiting disabled in development mode');
 }
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// NO GLOBAL BODY PARSING - Let routes handle their own parsing
+// This prevents conflicts with multer file uploads
 
 // Compression
 app.use(compression());
@@ -78,8 +79,12 @@ if (isDevelopment) {
     app.use(morgan('combined'));
 }
 
-// Serve static files for uploads
-app.use('/uploads', express.static('uploads'));
+// Serve static files for uploads with CORS headers
+app.use('/uploads', (req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_URL || 'http://localhost:3000');
+    next();
+}, express.static('uploads'));
 
 // API Routes
 app.use('/api/auth', authRoutes);

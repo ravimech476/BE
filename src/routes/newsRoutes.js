@@ -6,6 +6,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// JSON body parser for non-file-upload routes
+const jsonParser = express.json({ limit: '10mb' });
+
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, '../../uploads/news');
 if (!fs.existsSync(uploadDir)) {
@@ -41,13 +44,13 @@ const upload = multer({
 });
 
 // Public routes
-router.get('/', newsController.getAllNews);
-router.get('/:id', newsController.getNews);
+router.get('/', jsonParser, newsController.getAllNews);
+router.get('/:id', jsonParser, newsController.getNews);
 
-// Admin routes
-router.get('/admin/all', authenticate, authorize('admin'), newsController.getAllNewsForAdmin);
+// Admin routes (with file uploads - NO json parser for create/update)
+router.get('/admin/all', authenticate, authorize('admin'), jsonParser, newsController.getAllNewsForAdmin);
 router.post('/', authenticate, authorize('admin'), upload.single('image'), newsController.createNews);
 router.put('/:id', authenticate, authorize('admin'), upload.single('image'), newsController.updateNews);
-router.delete('/:id', authenticate, authorize('admin'), newsController.deleteNews);
+router.delete('/:id', authenticate, authorize('admin'), jsonParser, newsController.deleteNews);
 
 module.exports = router;

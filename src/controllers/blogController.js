@@ -5,13 +5,45 @@ const Comment = require('../models/Comment');
 // Blog Post Controllers
 const createPost = async (req, res) => {
     try {
-        console.log('Creating post with data:', req.body);
+        console.log('=== CREATE POST REQUEST ===');
+        console.log('Headers:', req.headers);
+        console.log('Body:', req.body);
+        console.log('File:', req.file);
         console.log('User:', req.user);
+        
+        // Validate required fields
+        if (!req.body || !req.body.title || !req.body.content) {
+            return res.status(400).json({ 
+                error: 'Title and content are required',
+                received: req.body 
+            });
+        }
+        
+        // Handle uploaded image
+        const featured_image = req.file 
+            ? `/uploads/blog/${req.file.filename}`
+            : req.body.featured_image || null;
+        
+        // Parse categories if it's a JSON string
+        let categories = [];
+        if (req.body.categories) {
+            try {
+                categories = typeof req.body.categories === 'string' 
+                    ? JSON.parse(req.body.categories) 
+                    : req.body.categories;
+            } catch (e) {
+                console.error('Error parsing categories:', e);
+            }
+        }
         
         const postData = {
             ...req.body,
-            author_id: req.user.id
+            categories: categories,
+            author_id: req.user.id,
+            featured_image: featured_image
         };
+        
+        console.log('Processed postData:', postData);
         
         const post = await BlogPost.create(postData);
         console.log('Post created successfully:', post.id);
@@ -33,7 +65,10 @@ const createPost = async (req, res) => {
 const updatePost = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log('Updating post:', id, req.body);
+        console.log('=== UPDATE POST REQUEST ===');
+        console.log('Post ID:', id);
+        console.log('Body:', req.body);
+        console.log('File:', req.file);
         
         // Check if post exists and user is the author or admin
         const existingPost = await BlogPost.findById(id);
@@ -45,7 +80,30 @@ const updatePost = async (req, res) => {
             return res.status(403).json({ error: 'Not authorized to update this post' });
         }
         
-        const post = await BlogPost.update(id, req.body);
+        // Parse categories if it's a JSON string
+        let categories = undefined;
+        if (req.body.categories) {
+            try {
+                categories = typeof req.body.categories === 'string' 
+                    ? JSON.parse(req.body.categories) 
+                    : req.body.categories;
+            } catch (e) {
+                console.error('Error parsing categories:', e);
+            }
+        }
+        
+        // Handle uploaded image
+        const updateData = { ...req.body };
+        if (req.file) {
+            updateData.featured_image = `/uploads/blog/${req.file.filename}`;
+        }
+        if (categories !== undefined) {
+            updateData.categories = categories;
+        }
+        
+        console.log('Processed updateData:', updateData);
+        
+        const post = await BlogPost.update(id, updateData);
         console.log('Post updated successfully:', id);
         
         res.json({
@@ -100,6 +158,9 @@ const getPost = async (req, res) => {
             return res.status(404).json({ error: 'Post not found' });
         }
         
+        // Get category IDs for this post
+        const categoryIds = await BlogPost.getCategoryIds(id);
+        
         // Get comments for this post
         const comments = await Comment.getByPostId(id);
         
@@ -107,6 +168,7 @@ const getPost = async (req, res) => {
             success: true,
             post: {
                 ...post,
+                category_ids: categoryIds, // Array of category IDs
                 comments
             }
         });

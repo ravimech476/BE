@@ -3,6 +3,10 @@ const { body, param, query, validationResult } = require('express-validator');
 const handleValidationErrors = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        // Debug logging
+        console.log('Validation failed. req.body:', req.body);
+        console.log('Validation errors:', errors.array());
+        
         return res.status(400).json({ 
             error: 'Validation failed',
             details: errors.array() 
@@ -89,13 +93,20 @@ const validateBlogPost = [
         .withMessage('Status must be either draft or published'),
     body('categories')
         .optional()
+        .customSanitizer(value => {
+            // Handle both JSON string and array
+            if (typeof value === 'string') {
+                try {
+                    return JSON.parse(value);
+                } catch (e) {
+                    return value;
+                }
+            }
+            return value;
+        })
         .isArray()
         .withMessage('Categories must be an array'),
-    body('featured_image')
-        .optional()
-        .trim()
-        .isURL()
-        .withMessage('Featured image must be a valid URL'),
+    // Skip URL validation for featured_image - file uploads handle this
     handleValidationErrors
 ];
 
@@ -121,13 +132,20 @@ const validateBlogPostUpdate = [
         .withMessage('Status must be either draft or published'),
     body('categories')
         .optional()
+        .customSanitizer(value => {
+            // Handle both JSON string and array
+            if (typeof value === 'string') {
+                try {
+                    return JSON.parse(value);
+                } catch (e) {
+                    return value;
+                }
+            }
+            return value;
+        })
         .isArray()
         .withMessage('Categories must be an array'),
-    body('featured_image')
-        .optional()
-        .trim()
-        .isURL()
-        .withMessage('Featured image must be a valid URL'),
+    // Skip URL validation for featured_image - file uploads handle this
     handleValidationErrors
 ];
 
