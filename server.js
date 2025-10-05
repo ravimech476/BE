@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const socketIO = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -7,14 +9,25 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const { connectDB } = require('./src/config/database');
+const { setupSocketIO } = require('./src/config/socket');
 const authRoutes = require('./src/routes/authRoutes');
 const blogRoutes = require('./src/routes/blogRoutes');
 const eventRoutes = require('./src/routes/eventRoutes');
 const leaderRoutes = require('./src/routes/leaderRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const newsRoutes = require('./src/routes/newsRoutes');
+const chatRoutes = require('./src/routes/chatRoutes');
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIO(server, {
+    cors: {
+        origin: process.env.CLIENT_URL || 'http://localhost:3000',
+        credentials: true,
+        methods: ['GET', 'POST']
+    }
+});
+
 const PORT = process.env.PORT || 5000;
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -93,6 +106,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/leaders', leaderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/news', newsRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -150,12 +164,16 @@ const startServer = async () => {
         // Connect to database
         await connectDB();
         
+        // Setup Socket.IO
+        setupSocketIO(io);
+        
         // Start listening
-        app.listen(PORT, () => {
+        server.listen(PORT, () => {
             console.log(`✅ Server running on port ${PORT}`);
             console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
             console.log(`🌐 API URL: http://localhost:${PORT}`);
             console.log(`🎨 Frontend URL: ${process.env.CLIENT_URL}`);
+            console.log(`🔌 Socket.IO enabled for real-time chat`);
             if (isDevelopment) {
                 console.log('🔧 Development mode: Rate limiting disabled');
             }
@@ -171,10 +189,10 @@ startServer();
 // Graceful shutdown
 process.on('SIGTERM', () => {
     console.log('SIGTERM signal received: closing HTTP server');
-    app.close(() => {
+    server.close(() => {
         console.log('HTTP server closed');
         process.exit(0);
     });
 });
 
-module.exports = app;
+module.exports = { app, io };
