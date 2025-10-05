@@ -147,6 +147,19 @@ class User {
         return await bcrypt.compare(plainPassword, hashedPassword);
     }
     
+    static async findAll() {
+        const pool = getPool();
+        const result = await pool.request()
+            .query(`
+                SELECT id, username, email_id, first_name, last_name, 
+                       role, status, phone, last_login_datetime, created_date
+                FROM tbl_users 
+                WHERE status = 'active'
+                ORDER BY first_name, last_name
+            `);
+        return result.recordset;
+    }
+    
     static async getAll(filters = {}) {
         const pool = getPool();
         let query = `

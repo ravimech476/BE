@@ -22,7 +22,8 @@
     "show:roles": "node showRoles.js",
     "check:constraint-details": "node checkConstraintDetails.js",
     "check:admin": "node checkAdmin.js",
-    "create:leaders-table": "node src/migrations/createLeadersTable.js"
+    "create:leaders-table": "node src/migrations/createLeadersTable.js",
+    "check:users": "node checkUsers.js"
   },
   "dependencies": {
     "express": "^4.18.2",
