@@ -27,7 +27,8 @@
     "check:users": "node checkUsers.js",
     "add:birthday-field": "node src/migrations/addBirthdayField.js",
     "create:chat-tables": "node src/migrations/createChatTables.js",
-    "create:dashboard-links-table": "node src/migrations/createDashboardLinksTable.js"
+    "create:dashboard-links-table": "node src/migrations/createDashboardLinksTable.js",
+    "create:hero-table": "node src/migrations/createHeroSectionTable.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

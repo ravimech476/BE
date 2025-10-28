@@ -18,6 +18,7 @@ const userRoutes = require('./src/routes/userRoutes');
 const newsRoutes = require('./src/routes/newsRoutes');
 const chatRoutes = require('./src/routes/chatRoutes');
 const dashboardRoutes = require('./src/routes/dashboardRoutes');
+const heroRoutes = require('./src/routes/heroRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -109,6 +110,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/hero', heroRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
