@@ -6,7 +6,10 @@ const { authenticate, authorize } = require('../middleware/auth');
 // Apply JSON parser
 router.use(express.json());
 
-// All routes require authentication and admin role
+// PUBLIC ROUTE - Get all subcategories or filter by category (no authentication required)
+router.get('/public', subCategoryController.getAllSubCategories);
+
+// All routes below require authentication and admin role
 router.use(authenticate);
 router.use(authorize('admin'));
 

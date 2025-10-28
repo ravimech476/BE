@@ -9,6 +9,9 @@ const jsonParser = express.json({ limit: '10mb' });
 // Public routes - Get all active dashboard links
 router.get('/links', jsonParser, dashboardController.getAllLinks);
 
+// Public route - Get dashboard links grouped by category
+router.get('/links-by-category', jsonParser, dashboardController.getLinksByCategory);
+
 // Admin only routes
 router.post('/links', authenticate, authorize('admin'), jsonParser, dashboardController.createLink);
 router.get('/links/:id', authenticate, authorize('admin'), jsonParser, dashboardController.getLink);

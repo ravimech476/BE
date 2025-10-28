@@ -18,6 +18,60 @@ exports.getAllLinks = async (req, res) => {
     }
 };
 
+// Get dashboard links grouped by category and subcategory (public)
+exports.getLinksByCategory = async (req, res) => {
+    try {
+        const links = await DashboardLink.getAll({ status: 'active' });
+        
+        // Group links by category and subcategory
+        const groupedData = {};
+        
+        links.forEach(link => {
+            if (!link.category_id || !link.subcategory_id) return;
+            
+            if (!groupedData[link.category_id]) {
+                groupedData[link.category_id] = {
+                    category_id: link.category_id,
+                    category_name: link.category_name,
+                    subcategories: {}
+                };
+            }
+            
+            if (!groupedData[link.category_id].subcategories[link.subcategory_id]) {
+                groupedData[link.category_id].subcategories[link.subcategory_id] = {
+                    subcategory_id: link.subcategory_id,
+                    subcategory_name: link.subcategory_name,
+                    links: []
+                };
+            }
+            
+            groupedData[link.category_id].subcategories[link.subcategory_id].links.push({
+                id: link.id,
+                title: link.title,
+                description: link.description,
+                url: link.url
+            });
+        });
+        
+        // Convert to array format
+        const result = Object.values(groupedData).map(category => ({
+            ...category,
+            subcategories: Object.values(category.subcategories)
+        }));
+        
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        console.error('Get links by category error:', error);
+        res.status(500).json({ 
+            error: 'Failed to get dashboard links',
+            details: error.message 
+        });
+    }
+};
+
 // Get single dashboard link
 exports.getLink = async (req, res) => {
     try {
