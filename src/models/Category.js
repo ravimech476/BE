@@ -1,131 +1,93 @@
 const { getPool, sql } = require('../config/database');
 
 class Category {
-    static async create(categoryData) {
+    static async findAll() {
         const pool = getPool();
-        const slug = categoryData.slug || this.generateSlug(categoryData.name);
-        
         const result = await pool.request()
-            .input('name', sql.NVarChar, categoryData.name)
-            .input('slug', sql.NVarChar, slug)
-            .input('description', sql.NVarChar, categoryData.description || null)
             .query(`
-                INSERT INTO blog_categories (name, slug, description)
-                OUTPUT INSERTED.*
-                VALUES (@name, @slug, @description)
+                SELECT id, name, created_date, modified_date
+                FROM categories
+                ORDER BY name ASC
             `);
-        
-        return result.recordset[0];
+        return result.recordset;
     }
-    
-    static async update(categoryId, updateData) {
-        const pool = getPool();
-        const updates = [];
-        const request = pool.request();
-        
-        request.input('id', sql.Int, categoryId);
-        
-        if (updateData.name !== undefined) {
-            updates.push('name = @name');
-            request.input('name', sql.NVarChar, updateData.name);
-            
-            if (!updateData.slug) {
-                updates.push('slug = @slug');
-                request.input('slug', sql.NVarChar, this.generateSlug(updateData.name));
-            }
-        }
-        
-        if (updateData.slug !== undefined) {
-            updates.push('slug = @slug');
-            request.input('slug', sql.NVarChar, updateData.slug);
-        }
-        
-        if (updateData.description !== undefined) {
-            updates.push('description = @description');
-            request.input('description', sql.NVarChar, updateData.description);
-        }
-        
-        const query = `
-            UPDATE blog_categories 
-            SET ${updates.join(', ')}
-            OUTPUT INSERTED.*
-            WHERE id = @id
-        `;
-        
-        const result = await request.query(query);
-        return result.recordset[0];
-    }
-    
+
     static async findById(id) {
         const pool = getPool();
         const result = await pool.request()
             .input('id', sql.Int, id)
             .query(`
-                SELECT c.*, 
-                       (SELECT COUNT(*) FROM blog_post_categories WHERE category_id = c.id) as post_count
-                FROM blog_categories c
-                WHERE c.id = @id
+                SELECT id, name, created_date, modified_date
+                FROM categories
+                WHERE id = @id
             `);
-        
         return result.recordset[0];
     }
-    
-    static async findBySlug(slug) {
+
+    static async create(categoryData) {
         const pool = getPool();
         const result = await pool.request()
-            .input('slug', sql.NVarChar, slug)
+            .input('name', sql.NVarChar, categoryData.name)
             .query(`
-                SELECT c.*, 
-                       (SELECT COUNT(*) FROM blog_post_categories WHERE category_id = c.id) as post_count
-                FROM blog_categories c
-                WHERE c.slug = @slug
+                INSERT INTO categories (name)
+                OUTPUT INSERTED.*
+                VALUES (@name)
             `);
-        
         return result.recordset[0];
     }
-    
-    static async getAll() {
+
+    static async update(id, categoryData) {
         const pool = getPool();
         const result = await pool.request()
+            .input('id', sql.Int, id)
+            .input('name', sql.NVarChar, categoryData.name)
             .query(`
-                SELECT c.*, 
-                       (SELECT COUNT(*) 
-                        FROM blog_post_categories pc 
-                        JOIN blog_posts p ON pc.post_id = p.id 
-                        WHERE pc.category_id = c.id AND p.status = 'published') as post_count
-                FROM blog_categories c
-                ORDER BY c.name
+                UPDATE categories 
+                SET name = @name,
+                    modified_date = GETDATE()
+                OUTPUT INSERTED.*
+                WHERE id = @id
             `);
-        
-        return result.recordset;
+        return result.recordset[0];
     }
-    
-    static async delete(categoryId) {
+
+    static async delete(id) {
         const pool = getPool();
         
-        // Check if category has posts
-        const checkResult = await pool.request()
-            .input('id', sql.Int, categoryId)
-            .query('SELECT COUNT(*) as count FROM blog_post_categories WHERE category_id = @id');
+        // Check if category has subcategories
+        const subCatCheck = await pool.request()
+            .input('id', sql.Int, id)
+            .query(`
+                SELECT COUNT(*) as count
+                FROM subcategories
+                WHERE category_id = @id
+            `);
         
-        if (checkResult.recordset[0].count > 0) {
-            throw new Error('Cannot delete category with associated posts');
+        if (subCatCheck.recordset[0].count > 0) {
+            throw new Error('Cannot delete category with existing subcategories');
+        }
+        
+        // Check if category is used in dashboard links
+        const dashboardCheck = await pool.request()
+            .input('id', sql.Int, id)
+            .query(`
+                SELECT COUNT(*) as count
+                FROM dashboard_links
+                WHERE category_id = @id
+            `);
+        
+        if (dashboardCheck.recordset[0].count > 0) {
+            throw new Error('Cannot delete category used in dashboard links');
         }
         
         const result = await pool.request()
-            .input('id', sql.Int, categoryId)
-            .query('DELETE FROM blog_categories WHERE id = @id');
-        
-        return result.rowsAffected[0] > 0;
-    }
-    
-    static generateSlug(name) {
-        return name
-            .toLowerCase()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
+            .input('id', sql.Int, id)
+            .query(`
+                DELETE FROM categories 
+                OUTPUT DELETED.*
+                WHERE id = @id
+            `);
+        return result.recordset[0];
     }
 }
 

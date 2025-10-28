@@ -29,7 +29,10 @@
     "create:chat-tables": "node src/migrations/createChatTables.js",
     "create:dashboard-links-table": "node src/migrations/createDashboardLinksTable.js",
     "create:hero-table": "node src/migrations/createHeroSectionTable.js",
-    "create:business-news-table": "node src/migrations/createBusinessNewsTable.js"
+    "create:business-news-table": "node src/migrations/createBusinessNewsTable.js",
+    "create:categories-table": "node src/migrations/createCategoriesTable.js",
+    "create:subcategories-table": "node src/migrations/createSubCategoriesTable.js",
+    "update:dashboard-links-table": "node src/migrations/updateDashboardLinksTable.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

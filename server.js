@@ -20,6 +20,8 @@ const chatRoutes = require('./src/routes/chatRoutes');
 const dashboardRoutes = require('./src/routes/dashboardRoutes');
 const heroRoutes = require('./src/routes/heroRoutes');
 const businessNewsRoutes = require('./src/routes/businessNewsRoutes');
+const categoryRoutes = require('./src/routes/categoryRoutes');
+const subCategoryRoutes = require('./src/routes/subCategoryRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -113,6 +115,8 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/hero', heroRoutes);
 app.use('/api/business-news', businessNewsRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/subcategories', subCategoryRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
