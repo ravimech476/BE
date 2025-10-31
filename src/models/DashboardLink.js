@@ -17,7 +17,9 @@ class DashboardLink {
                 VALUES (@title, @description, @url, @category_id, @subcategory_id, @display_order, @status)
             `);
         
-        return result.recordset[0];
+        // Fetch the created record with category and subcategory names
+        const createdId = result.recordset[0].id;
+        return await this.findById(createdId);
     }
     
     static async findById(id) {
@@ -95,12 +97,13 @@ class DashboardLink {
         const query = `
             UPDATE dashboard_links 
             SET ${updates.join(', ')}, modified_date = @modified_date
-            OUTPUT INSERTED.*
             WHERE id = @id
         `;
         
-        const result = await request.query(query);
-        return result.recordset[0];
+        await request.query(query);
+        
+        // Fetch the updated record with category and subcategory names
+        return await this.findById(id);
     }
     
     static async delete(id) {

@@ -18,6 +18,24 @@ exports.getAllLinks = async (req, res) => {
     }
 };
 
+// Get all dashboard links for admin (includes all statuses)
+exports.getAllLinksAdmin = async (req, res) => {
+    try {
+        const links = await DashboardLink.getAll({}); // No filter - get all
+        
+        res.json({
+            success: true,
+            links
+        });
+    } catch (error) {
+        console.error('Get all dashboard links (admin) error:', error);
+        res.status(500).json({ 
+            error: 'Failed to get dashboard links',
+            details: error.message 
+        });
+    }
+};
+
 // Get dashboard links grouped by category and subcategory (public)
 exports.getLinksByCategory = async (req, res) => {
     try {
@@ -98,7 +116,7 @@ exports.getLink = async (req, res) => {
 // Create dashboard link (admin only)
 exports.createLink = async (req, res) => {
     try {
-        const { title, description, url, display_order, status } = req.body;
+        const { title, description, url, category_id, subcategory_id, display_order, status } = req.body;
         
         if (!title || !url) {
             return res.status(400).json({ 
@@ -110,6 +128,8 @@ exports.createLink = async (req, res) => {
             title,
             description,
             url,
+            category_id,
+            subcategory_id,
             display_order,
             status
         });

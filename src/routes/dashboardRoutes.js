@@ -13,6 +13,7 @@ router.get('/links', jsonParser, dashboardController.getAllLinks);
 router.get('/links-by-category', jsonParser, dashboardController.getLinksByCategory);
 
 // Admin only routes
+router.get('/links/admin/all', authenticate, authorize('admin'), jsonParser, dashboardController.getAllLinksAdmin);
 router.post('/links', authenticate, authorize('admin'), jsonParser, dashboardController.createLink);
 router.get('/links/:id', authenticate, authorize('admin'), jsonParser, dashboardController.getLink);
 router.put('/links/:id', authenticate, authorize('admin'), jsonParser, dashboardController.updateLink);
