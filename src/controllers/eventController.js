@@ -150,6 +150,52 @@ const eventController = {
                 error: 'Failed to fetch upcoming events'
             });
         }
+    },
+
+    // Get completed events
+    getCompletedEvents: async (req, res) => {
+        try {
+            const limit = req.query.limit || 5;
+            const events = await Event.getCompleted(parseInt(limit));
+            
+            res.json({
+                success: true,
+                data: events
+            });
+        } catch (error) {
+            console.error('Get completed events error:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to fetch completed events'
+            });
+        }
+    },
+
+    // Get events by month (for calendar view)
+    getEventsByMonth: async (req, res) => {
+        try {
+            const { year, month } = req.query;
+            
+            if (!year || !month) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Year and month are required'
+                });
+            }
+
+            const events = await Event.getByMonth(parseInt(year), parseInt(month));
+            
+            res.json({
+                success: true,
+                data: events
+            });
+        } catch (error) {
+            console.error('Get events by month error:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to fetch events for month'
+            });
+        }
     }
 };
 

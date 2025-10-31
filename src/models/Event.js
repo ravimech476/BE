@@ -109,6 +109,35 @@ class Event {
             `);
         return result.recordset;
     }
+
+    static async getCompleted(limit = 5) {
+        const pool = getPool();
+        const result = await pool.request()
+            .input('limit', sql.Int, limit)
+            .query(`
+                SELECT TOP(@limit) id, event_name, event_date, description
+                FROM tbl_events
+                WHERE status = 'active' AND event_date < GETDATE()
+                ORDER BY event_date DESC
+            `);
+        return result.recordset;
+    }
+
+    static async getByMonth(year, month) {
+        const pool = getPool();
+        const result = await pool.request()
+            .input('year', sql.Int, year)
+            .input('month', sql.Int, month)
+            .query(`
+                SELECT id, event_name, event_date, description
+                FROM tbl_events
+                WHERE status = 'active' 
+                AND YEAR(event_date) = @year 
+                AND MONTH(event_date) = @month
+                ORDER BY event_date ASC
+            `);
+        return result.recordset;
+    }
 }
 
 module.exports = Event;

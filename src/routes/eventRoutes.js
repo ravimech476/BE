@@ -60,6 +60,8 @@ const validateId = [
 
 // Public routes - For displaying events to employees
 router.get('/upcoming', jsonParser, eventController.getUpcomingEvents);
+router.get('/completed', jsonParser, eventController.getCompletedEvents);
+router.get('/by-month', jsonParser, eventController.getEventsByMonth);
 router.get('/', jsonParser, eventController.getAllEvents);
 router.get('/:id', validateId, jsonParser, eventController.getEvent);
 
